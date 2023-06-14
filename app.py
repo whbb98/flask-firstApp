@@ -7,6 +7,7 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
+CORS(app, origins='http://doctoraicollab.test')
 
 # Define the necessary constants
 IMAGE_SHAPE = (224, 224)
