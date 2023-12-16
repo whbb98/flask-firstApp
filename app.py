@@ -10,9 +10,9 @@ APP_URL = 'localhost'
 CORS(app, origins=APP_URL)
 
 IMAGE_SHAPE = (224, 224)
-model_v1 = tf.keras.models.load_model("mobilenet_model.h5")
-# model_v2 = tf.keras.models.load_model("")
-xray_class_names = {
+model_v1 = tf.keras.models.load_model("./models/mobilenet_model.h5")
+# model = tf.keras.models.load_model("./models/NIH_Seresnet152_model.h5", compile=False)
+model_v1_classes = {
     0: 'Atelectasis',
     1: 'Cardiomegaly',
     2: 'Effusion',
@@ -58,7 +58,7 @@ def model_v0_info():
 def model_v1_info():
     response = "<h1 style='color:#04aa6d'>Supported classes by model-v1:</h1>"
     response += "<ul>"
-    for val in xray_class_names.values():
+    for val in model_v1_classes.values():
         response += f"<li>{val}</li>"
     response += "</ul>"
     return response
@@ -84,9 +84,45 @@ def model_v1_predict():
     processed_image = np.expand_dims(resized_image, axis=0)
     predictions = model_v1.predict(processed_image)
     results = {
-        xray_class_names[class_index]: "{:.2f}".format(float(predictions[0][class_index]) * 100)
-        for class_index in range(len(xray_class_names))
+        model_v1_classes[class_index]: "{:.2f}".format(float(predictions[0][class_index]) * 100)
+        for class_index in range(len(model_v1_classes))
     }
+    return jsonify(results)
+
+
+@app.route('/model_nih_seresnet/predict', methods=['POST'])
+def model_nih_seresnet_predict():
+    img_size = 600
+    target_cols = [
+        'Cardiomegaly', 'Hernia', 'Infiltration', 'Nodule', 'Emphysema', 'Effusion',
+        'Atelectasis', 'Pleural_Thickening', 'Pneumothorax', 'Mass', 'Fibrosis',
+        'Consolidation', 'Edema', 'Pneumonia'
+    ]
+    try:
+        data = request.get_json()
+        image64 = data.get('image64')
+        if image64 is None:
+            return jsonify({'error': 'Base64 image not provided'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Bad request format'}), 400
+
+    try:
+        image_data = decode_image64(image64)
+        image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
+    except Exception as e:
+        return jsonify({'error': 'Image Processing Failed!'}), 400
+
+    resized_image = cv2.resize(image, (img_size, img_size))
+    processed_image = np.expand_dims(resized_image, axis=0)
+
+    # Use the loaded model for prediction
+    predictions = model.predict(processed_image)
+
+    results = {
+        target_cols[class_index]: "{:.2f}".format(float(predictions[0][class_index]) * 100)
+        for class_index in range(len(target_cols))
+    }
+
     return jsonify(results)
 
 
