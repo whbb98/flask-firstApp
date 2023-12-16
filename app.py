@@ -59,14 +59,12 @@ def welcome():
 def info():
     return {
         "model_v1": {
-            "output_classes": "http://localhost:5000/model_v1",
-            "predict": "http://localhost:5000/model_v1/predict",
-            "Method":"POST"
+            "output_classes(get)": "http://localhost:5000/model_v1",
+            "predict(post)": "http://localhost:5000/model_v1/predict",
         },
         "model_v2": {
-            "output_classes": "http://localhost:5000/model_v2",
-            "predict": "http://localhost:5000/model_v2/predict",
-            "Method": "POST"
+            "output_classes(get)": "http://localhost:5000/model_v2",
+            "predict(post)": "http://localhost:5000/model_v2/predict",
         },
     }
 
