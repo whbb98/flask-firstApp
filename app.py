@@ -11,7 +11,8 @@ CORS(app, origins=APP_URL)
 
 IMAGE_SHAPE = (224, 224)
 model_v1 = tf.keras.models.load_model("./models/mobilenet_model.h5")
-# model = tf.keras.models.load_model("./models/NIH_Seresnet152_model.h5", compile=False)
+# model_v2 = tf.keras.models.load_model("./models/NIH_Seresnet152_model.h5")
+
 model_v1_classes = {
     0: 'Atelectasis',
     1: 'Cardiomegaly',
@@ -28,6 +29,11 @@ model_v1_classes = {
     12: 'Pleural_Thickening',
     13: 'Hernia'
 }
+model_v2_classes = [
+    'Cardiomegaly', 'Hernia', 'Infiltration', 'Nodule', 'Emphysema', 'Effusion',
+    'Atelectasis', 'Pleural_Thickening', 'Pneumothorax', 'Mass', 'Fibrosis',
+    'Consolidation', 'Edema', 'Pneumonia'
+]
 
 
 def decode_image64(image64):
@@ -49,9 +55,20 @@ def welcome():
     return response
 
 
-@app.route('/model_v0', methods=['GET'])
-def model_v0_info():
-    return jsonify({'greeting': 'welcome to /model_v0/predict!'})
+@app.route('/info', methods=['GET'])
+def info():
+    return {
+        "model_v1": {
+            "output_classes": "http://localhost:5000/model_v1",
+            "predict": "http://localhost:5000/model_v1/predict",
+            "Method":"POST"
+        },
+        "model_v2": {
+            "output_classes": "http://localhost:5000/model_v2",
+            "predict": "http://localhost:5000/model_v2/predict",
+            "Method": "POST"
+        },
+    }
 
 
 @app.route('/model_v1', methods=['GET'])
@@ -90,14 +107,19 @@ def model_v1_predict():
     return jsonify(results)
 
 
-@app.route('/model_nih_seresnet/predict', methods=['POST'])
-def model_nih_seresnet_predict():
+@app.route('/model_v2', methods=['GET'])
+def model_v2_info():
+    response = "<h1 style='color:#04aa6d'>Supported classes by model-v1:</h1>"
+    response += "<ul>"
+    for val in model_v2_classes:
+        response += f"<li>{val}</li>"
+    response += "</ul>"
+    return response
+
+
+@app.route('/model_v2/predict', methods=['POST'])
+def model_v2_predict():
     img_size = 600
-    target_cols = [
-        'Cardiomegaly', 'Hernia', 'Infiltration', 'Nodule', 'Emphysema', 'Effusion',
-        'Atelectasis', 'Pleural_Thickening', 'Pneumothorax', 'Mass', 'Fibrosis',
-        'Consolidation', 'Edema', 'Pneumonia'
-    ]
     try:
         data = request.get_json()
         image64 = data.get('image64')
@@ -116,11 +138,11 @@ def model_nih_seresnet_predict():
     processed_image = np.expand_dims(resized_image, axis=0)
 
     # Use the loaded model for prediction
-    predictions = model.predict(processed_image)
+    predictions = model_v2.predict(processed_image)
 
     results = {
-        target_cols[class_index]: "{:.2f}".format(float(predictions[0][class_index]) * 100)
-        for class_index in range(len(target_cols))
+        model_v2_classes[class_index]: "{:.2f}".format(float(predictions[0][class_index]) * 100)
+        for class_index in range(len(model_v2_classes))
     }
 
     return jsonify(results)
