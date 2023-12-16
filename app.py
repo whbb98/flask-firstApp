@@ -62,10 +62,10 @@ def info():
             "classes": "http://localhost:5000/model_v1",
             "predict": "http://localhost:5000/model_v1/predict",
         },
-        "model_v2": {
-            "classes": "http://localhost:5000/model_v2",
-            "predict": "http://localhost:5000/model_v2/predict",
-        },
+        # "model_v2": {
+        #     "classes": "http://localhost:5000/model_v2",
+        #     "predict": "http://localhost:5000/model_v2/predict",
+        # },
     }
 
 
